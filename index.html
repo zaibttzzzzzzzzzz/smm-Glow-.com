@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glow SMM Panel</title>
+    <style>
+        :root {
+            --glow: #7a00ff;
+            --bg: #0a0a1a;
+            --card: #1a1a2e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Arial', sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: white;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Glowing Bulbs Background */
+        .glow-bulbs {
+            position: fixed;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bulb {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            animation: glow 2s infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px currentColor; }
+            50% { box-shadow: 0 0 50px currentColor; }
+        }
+
+        /* Auth Section */
+        .auth-box {
+            background: rgba(255,255,255,0.05);
+            width: 400px;
+            padding: 30px;
+            border-radius: 15px;
+            position: relative;
+            z-index: 1;
+            backdrop-filter: blur(10px);
+        }
+
+        /* Social Media Categories */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .category-btn {
+            background: var(--card);
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .category-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px var(--glow);
+        }
+
+        /* Services Section */
+        .service-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .service-card {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* Order Form */
+        .order-form {
+            background: var(--card);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 500px;
+            margin: 20px auto;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--glow);
+            border-radius: 8px;
+            color: white;
+        }
+
+        .pay-btn {
+            background: linear-gradient(45deg, #25D366, #128C7E);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Glowing Bulbs Background -->
+    <div class="glow-bulbs">
+        <div class="bulb" style="top:10%; left:20%; color:#ff0000;"></div>
+        <div class="bulb" style="top:30%; left:70%; color:#00ff00;"></div>
+        <div class="bulb" style="top:70%; left:40%; color:#0000ff;"></div>
+        <!-- Add more bulbs -->
+    </div>
+
+    <!-- Auth Section -->
+    <div id="authSection" class="auth-box" style="margin: 50px auto;">
+        <h2 style="text-align:center; margin-bottom:20px;">Welcome to Glow SMM</h2>
+        <input type="email" class="form-input" placeholder="Email Address" id="email">
+        <input type="password" class="form-input" placeholder="Password" id="password">
+        <button class="pay-btn" onclick="login()">Login</button>
+        <p style="text-align:center; margin-top:15px;">New user? <a href="#" onclick="toggleAuth()">Create Account</a></p>
+    </div>
+
+    <!-- Main Panel -->
+    <div id="mainPanel" class="hidden">
+        <!-- Social Media Categories -->
+        <div class="category-grid">
+            <button class="category-btn" data-category="tiktok">TikTok Services</button>
+            <button class="category-btn" data-category="youtube">YouTube Services</button>
+            <button class="category-btn" data-category="instagram">Instagram Services</button>
+            <!-- Add more categories -->
+        </div>
+
+        <!-- Services Display -->
+        <div class="service-grid" id="servicesContainer"></div>
+
+        <!-- Order Form -->
+        <div class="order-form hidden" id="orderForm">
+            <h3 id="selectedService"></h3>
+            <input type="url" class="form-input" placeholder="Video/Profile Link" id="orderLink">
+            <select class="form-input" id="paymentMethod">
+                <option value="jazzcash">JazzCash</option>
+                <option value="easypaisa">EasyPaisa</option>
+            </select>
+            <input type="tel" class="form-input" placeholder="Your Phone Number" id="userNumber">
+            <button class="pay-btn" onclick="processPayment()">Complete Payment</button>
+        </div>
+    </div>
+
+    <script>
+        // Service Database
+        const services = {
+            tiktok: [
+                { name: "TikTok Likes (500+)", price: 180, min: 500 },
+                { name: "TikTok PAK Followers (1000+)", price: 650, min: 500 },
+                // Add 50+ TikTok services
+            ],
+            youtube: [
+                { name: "YouTube Subscribers (1000+)", price: 1050, min: 1000 },
+                // Add 50+ YouTube services
+            ],
+            // Add other categories
+        };
+
+        // Current Order Details
+        let currentOrder = {};
+
+        // Auth System
+        function toggleAuth() {
+            const authSection = document.getElementById('authSection');
+            authSection.innerHTML = `
+                <h2 style="text-align:center; margin-bottom:20px;">Create Account</h2>
+                <input type="email" class="form-input" placeholder="Email Address" id="regEmail">
+                <input type="tel" class="form-input" placeholder="Phone Number" id="regPhone">
+                <input type="password" class="form-input" placeholder="Create Password" id="regPassword">
+                <button class="pay-btn" onclick="register()">Sign Up</button>
+                <p style="text-align:center; margin-top:15px;">Already user? <a href="#" onclick="toggleAuth()">Login Here</a></p>
+            `;
+        }
+
+        function login() {
+            // Add real auth later
+            document.getElementById('authSection').classList.add('hidden');
+            document.getElementById('mainPanel').classList.remove('hidden');
+            loadCategory('tiktok');
+        }
+
+        // Service Loader
+        document.querySelectorAll('.category-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const category = btn.dataset.category;
+                loadCategory(category);
+            });
+        });
+
+        function loadCategory(category) {
+            const container = document.getElementById('servicesContainer');
+            container.innerHTML = services[category].map(service => `
+                <div class="service-card">
+                    <h3>${service.name}</h3>
+                    <p>Price: PKR ${service.price}/${service.min}+</p>
+                    <button class="pay-btn" 
+                            onclick="startOrder('${service.name}', ${service.price}, ${service.min})">
+                        Order Now
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        // Order System
+        function startOrder(name, price, min) {
+            currentOrder = { name, price, min };
+            document.getElementById('selectedService').textContent = name;
+            document.getElementById('orderForm').classList.remove('hidden');
+        }
+
+        function processPayment() {
+            const link = document.getElementById('orderLink').value;
+            const method = document.getElementById('paymentMethod').value;
+            const number = document.getElementById('userNumber').value;
+
+            // Send WhatsApp message to admin
+            const message = `New Order:
+Service: ${currentOrder.name}
+Link: ${link}
+Amount: PKR ${currentOrder.price}
+Payment Method: ${method}
+User Number: ${number}`;
+
+            window.open(`https://wa.me/923438220191?text=${encodeURIComponent(message)}`, '_blank');
+            
+            alert('Order placed successfully! We will process it soon.');
+            document.getElementById('orderForm').classList.add('hidden');
+        }
+
+        // Initialize glowing background
+        function createBulbs() {
+            const colors = ['#ff0000', '#00ff00', '#0000ff', '#ff00ff', '#ffff00'];
+            const bulbContainer = document.querySelector('.glow-bulbs');
+            
+            for(let i=0; i<50; i++) {
+                const bulb = document.createElement('div');
+                bulb.className = 'bulb';
+                bulb.style.top = Math.random()*100 + '%';
+                bulb.style.left = Math.random()*100 + '%';
+                bulb.style.color = colors[Math.floor(Math.random()*colors.length)];
+                bulb.style.animationDelay = Math.random()*2 + 's';
+                bulbContainer.appendChild(bulb);
+            }
+        }
+
+        createBulbs();
+    </script>
+</body>
+</html>
